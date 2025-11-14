@@ -1,5 +1,5 @@
 # NickbullRobot
-Acerca de Robots diseñados para seguimiento de objetos, navegación y teleoperados.
+Line-Following Robot with Artificial Intelligence and Computer Vision Using MobileNetV2.
 
 
 https://github.com/user-attachments/assets/b739bbae-aa9f-4c24-afa7-d1060d802246
