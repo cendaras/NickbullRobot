@@ -1,0 +1,86 @@
+# Edge Impulse - OpenMV Image Classification Example
+
+import  sensor, image, time,os, tf, pyb
+
+from tb6612 import Motor
+from pyb import Pin
+
+# Connect a switch to pin 0 that will pull it low when the switch is closed.
+# Pin 1 will then light up.
+ON = Pin('P4', Pin.IN)
+m1 = Motor(1) # motor 1: A0 and A1
+m2 = Motor(2) # motor 2: B0 and B1
+
+
+
+thresholds = (220, 255)
+sensor.reset()                         # Reset and initialize the sensor.
+sensor.set_pixformat(sensor.GRAYSCALE)    # Set pixel format to RGB565 (or GRAYSCALE)
+sensor.set_framesize(sensor.QVGA)      # Set frame size to QVGA (320x240)
+sensor.set_windowing((240, 240))       # Set 240x240 window.
+sensor.skip_frames(time=500)          # Let the camera adjust.
+#lcd.init()
+net = "trained.tflite"
+labels = [line.rstrip('\n') for line in open("labels.txt")]
+velocidad = 2;
+a = 0
+b = 0
+c = 0
+d = 0
+f = 0
+
+
+clock = time.clock()
+while(True):
+
+    start=ON.value()
+    clock.tick()
+    if(start==0):
+        m1.set_speed(0) # Dere_R M1_derecho
+        m2.set_speed(0) #e
+    if(start==1):
+        img = sensor.snapshot()
+        y=img.draw_line((120,0,120,240),color=(200,0,0))
+        x=img.draw_line((0,120,320,120),color=(200,0,0))
+        blobs = img.binary([(0,80)]).find_blobs([thresholds], pixels_threshold=10, area_threshold=10, merge=True)
+        #lcd.display(img)
+        # default settings just do one detection... change them to search the image...
+        for obj in tf.classify(net, img, min_scale=1.0, scale_mul=0.8, x_overlap=0.5, y_overlap=0.5):
+            predictions_list = list(zip(labels, obj.output()))
+            for i in range(len(predictions_list)):
+                print("%s = %f" % (predictions_list[i][0], predictions_list[i][1]))
+                if(predictions_list[i][0] == 'adelante'):
+                    a = predictions_list[i][1]
+                if(predictions_list[i][0] == 'derecha'):
+                    b = predictions_list[i][1]
+                if(predictions_list[i][0] == 'izquierda'):
+                    c = predictions_list[i][1]
+                if(predictions_list[i][0] == 'radio derecha'):
+                    d = predictions_list[i][1]
+                if(predictions_list[i][0] == 'radio izquierda'):
+                    f = predictions_list[i][1]
+            if (a > 0.8):
+                print("ir adelante")
+                m1.set_speed(20 * velocidad) # Adelante derecho
+                m2.set_speed(-20 * velocidad) # Adelante izq
+            if (b > 0.8):
+                print("ir a la derecha")
+                #time.sleep(100)
+                m1.set_speed(20 * velocidad) # Derecha M1_derecho
+                m2.set_speed(20 * velocidad) #
+            if (c > 0.8):
+                print("ir a la izquierda")
+                #time.sleep(100)
+                m1.set_speed(-20 * velocidad)
+                m2.set_speed(-20 * velocidad)
+            if (d > 0.8):
+                print("ir a la derecha con radio")
+                #time.sleep(100)
+                m1.set_speed(10 * velocidad) # Dere_R M1_derecho
+                m2.set_speed(-25 * velocidad) #
+            if (f > 0.8):
+                print("ir a la izquierda con radio")
+                #time.sleep(100)
+                m1.set_speed(25 * velocidad) # Dere_R M1_derecho
+                m2.set_speed(-10 * velocidad) #
+
