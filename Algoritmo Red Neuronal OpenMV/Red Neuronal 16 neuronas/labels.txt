@@ -1,0 +1,5 @@
+adelante
+derecha
+izquierda
+radio derecha
+radio izquierda
